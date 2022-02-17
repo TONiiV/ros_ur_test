@@ -15,6 +15,7 @@ import rospy
 def main():
 
     rospy.init_node('send_joints')
+    #pub = rospy.Publisher('/action_move', std_msgs.msg.Int8, queue_size=1)
     pub = rospy.Publisher('/arm_controller/command',
                           JointTrajectory,
                           queue_size=10)
@@ -47,6 +48,18 @@ def main():
         # print(len(pts.positions))
         pub.publish(traj)
         rate.sleep()
+
+    # pts.positions = [2.1, -0.5, 1.2, 0.4, 0.3, 0.6]
+    # pts.time_from_start = rospy.Duration(1.0)
+    # cnt+=1
+    # cnt%=2
+    # # Set the points to the trajectory
+    # traj.points = []
+    # traj.points.append(pts)
+    # # Publish the message
+    # # print(len(pts.positions))
+    # pub.publish(traj)
+    # rate.sleep()
 
 if __name__ == '__main__':
     try:

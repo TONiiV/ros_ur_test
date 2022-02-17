@@ -25,8 +25,8 @@ class MoveItCartesianDemo():
         arm.set_pose_reference_frame('base_link')
                 
         # 设置位置(单位：米)和姿态（单位：弧度）的允许误差
-        arm.set_goal_position_tolerance(0.001)
-        arm.set_goal_orientation_tolerance(0.001)
+        arm.set_goal_position_tolerance(0.01)
+        arm.set_goal_orientation_tolerance(0.01)
 
         # 设置允许的最大速度和加速度
         arm.set_max_acceleration_scaling_factor(0.5)
@@ -42,6 +42,8 @@ class MoveItCartesianDemo():
                                                 
         # 获取当前位姿数据最为机械臂运动的起始位姿
         start_pose = arm.get_current_pose(end_effector_link).pose
+        ## Get current cartesian koordinates of the ee_link
+        print(start_pose.position)
                 
         # 初始化路点列表
         waypoints = []
@@ -63,8 +65,8 @@ class MoveItCartesianDemo():
         wpose.position.y += 0.075
         waypoints.append(deepcopy(wpose))
 
-        # wpose.position.y -= 0.075
-        # waypoints.append(deepcopy(wpose))
+        wpose.position.y -= 0.075
+        waypoints.append(deepcopy(wpose))
 
         # wpose.position.x -= 0.1
         # waypoints.append(deepcopy(wpose))
@@ -93,7 +95,7 @@ class MoveItCartesianDemo():
         # 设置机器臂当前的状态作为运动初始状态
         arm.set_start_state_to_current_state()
 
-        # 尝试规划一条笛卡尔空间下的路径，依次通过所有路点
+        # 尝试规划一条笛卡尔空间下的路径，依次通过所有路点 
         while fraction < 1.0 and attempts < maxtries:
             (plan, fraction) = arm.compute_cartesian_path (
                             waypoints,   # waypoint poses，路点列表
