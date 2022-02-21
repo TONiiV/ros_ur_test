@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from select import POLLWRBAND
 import rospy, sys
 import moveit_commander
 from moveit_commander import MoveGroupCommander
@@ -42,33 +43,53 @@ class MoveItCartesianDemo:
         end_effector_link = arm.get_end_effector_link()
 
         # set the roboter arm to 'home' position
-        arm.set_named_target('home')
+        arm.set_named_target('up')
         arm.go()
         rospy.sleep(1)
 
         # setup the target pose with cartesian values
                                     
-        target_pose = PoseStamped()
-        target_pose.header.frame_id = reference_frame
-        target_pose.header.stamp = rospy.Time.now()     
-        target_pose.pose.position.x = 0.331958
-        target_pose.pose.position.y = 0.0
-        target_pose.pose.position.z = 0.307887
-        target_pose.pose.orientation.x = -0.482974
-        target_pose.pose.orientation.y = 0.517043
-        target_pose.pose.orientation.z = -0.504953
-        target_pose.pose.orientation.w = -0.494393
+        # target_pose = PoseStamped()
+        # target_pose.header.frame_id = reference_frame
+        # target_pose.header.stamp = rospy.Time.now()     
+        # target_pose.pose.position.x = 0.360262
+        # target_pose.pose.position.y = 0.109284
+        # target_pose.pose.position.z = 0.439211
+        # target_pose.pose.orientation.x = -1.546266
+        # target_pose.pose.orientation.y = -0.063824
+        # target_pose.pose.orientation.z = -1.559499
+        # #target_pose.pose.orientation.w = -0.494393
     
         
         # set the target pose for ee_link & go!
-        arm.set_pose_target(target_pose, end_effector_link)
-        arm.go()
+        # arm.set_pose_target(target_pose, end_effector_link)
+        # arm.go()
 
         # init waypoints
         waypoints = []
-                
+        start_pose = arm.get_current_pose(end_effector_link).pose
+
+        waypoints.append(start_pose)
+
+        wpose = deepcopy(start_pose)
+        
+        wpose.position.z -= 0.05
+        wpose.position.x += 0.1
+        wpose.position.y += 0.1
+        waypoints.append(deepcopy(wpose))
+
+
+        wpose.position.x += 0.1
+        wpose.position.y += 0.1
+        wpose.position.z -= 0.05
+        waypoints.append(deepcopy(wpose))
+
+        wpose.orientation.x += 1.0
+        wpose.orientation.y += 0.5
+        waypoints.append(deepcopy(wpose))
+
         # add the target poses to the waypoints (allow multiple target poses planned)
-        waypoints.append(target_pose.pose)
+        # waypoints.append(target_pose.pose)
 
         # centerA = target_pose.pose.position.y
         # centerB = target_pose.pose.position.z
@@ -82,14 +103,16 @@ class MoveItCartesianDemo:
 
        
         fraction = 0.0   #path planned cover-percentage
-        maxtries = 100   #max try-times
+        maxtries = 10   #max try-times
         attempts = 0     
+        plan_lib = []
 
         # set the arm to start state
         arm.set_start_state_to_current_state()
 
         # using compute_cartesian_path method to plan the path
         while fraction < 1.0 and attempts < maxtries:
+        #while attempts < maxtries:
             (plan, fraction) = arm.compute_cartesian_path (
                             waypoints,   # waypoint poses
                             0.01,        # eef_step
@@ -106,28 +129,33 @@ class MoveItCartesianDemo:
                             
             # if the plan succeeds, execute it and send messsages
             if fraction == 1.0:
+                plan_lib.append(plan)
                 rospy.loginfo("Path computed successfully. Moving the arm.")
                 arm.execute(plan)
                 rospy.loginfo("Path execution complete.")
 
                 end_pose = arm.get_current_pose(end_effector_link).pose
                 print('End Pose: \n', end_pose)
+                print(plan)
                 
             # if the plan fails, send failure message
             else:
-                rospy.loginfo("Path planning failed with only " + str(fraction) + " success after " + str(maxtries) + " attempts.")  
+                rospy.loginfo("Path planning failed with only " + str(fraction) + " success after " + str(attempts) + " attempts.")  
 
                 rospy.sleep(1)
 
 
             # move the arm back to 'home'
-            arm.set_named_target('home')
-            arm.go()
+            # arm.set_named_target('home')
+            # arm.go()
             rospy.sleep(1)
 
             # turn off and exit moveit
             # moveit_commander.roscpp_shutdown()
             # moveit_commander.os._exit(0)
+        
+        #print(plan_lib)
+        #arm.execute(plan)
 
 if __name__ == "__main__":
     try:

@@ -36,8 +36,8 @@ def main():
 
     while not rospy.is_shutdown():
 
-        pts.positions = [uniform(0,pi),uniform(0,-pi/2),uniform(0,pi),uniform(0,pi),uniform(0,pi),uniform(0,pi)]
-        #pts.positions = [2.0, 0.0, 1.0, 0.0, 0.0, 1.0]
+        pts.positions = [uniform(0,pi),uniform(-0.1111*pi,-pi/2),uniform(-pi/4,pi/4),uniform(0,pi/6),uniform(0,pi),uniform(0,pi)]
+        #pts.positions = [0.0, -0.3137*pi, 0.3028*pi, 0.0083*pi, 0.2472*pi, 0.0]
         pts.time_from_start = rospy.Duration(1.0)
         cnt+=1
         cnt%=2
@@ -49,7 +49,7 @@ def main():
         pub.publish(traj)
         rate.sleep()
 
-    # pts.positions = [2.1, -0.5, 1.2, 0.4, 0.3, 0.6]
+    # pts.positions = [0.0, -0.3137*pi, 0.3028*pi, 0.0083*pi, 0.2472*pi, 0.0]
     # pts.time_from_start = rospy.Duration(1.0)
     # cnt+=1
     # cnt%=2
