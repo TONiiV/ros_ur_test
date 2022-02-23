@@ -17,8 +17,7 @@ class MoveItCartesianDemo:
         moveit_commander.roscpp_initialize(sys.argv)
 
         # Initialize ros node
-        rospy.init_node('moveit_circle_demo', anonymous=True)
-
+        rospy.init_node('moveit_cartesian_test1', anonymous=True)
 
                 
         # initialize move group commander
@@ -47,43 +46,50 @@ class MoveItCartesianDemo:
         arm.go()
         rospy.sleep(1)
 
-        # setup the target pose with cartesian values
+        #setup the target pose with cartesian values
                                     
-        # target_pose = PoseStamped()
-        # target_pose.header.frame_id = reference_frame
-        # target_pose.header.stamp = rospy.Time.now()     
-        # target_pose.pose.position.x = 0.360262
-        # target_pose.pose.position.y = 0.109284
-        # target_pose.pose.position.z = 0.439211
+        target_pose = PoseStamped()
+        target_pose.header.frame_id = reference_frame
+        target_pose.header.stamp = rospy.Time.now()     
+        target_pose.pose.position.x = 0.660262 #np.random.uniform(down,up)
+        target_pose.pose.position.y = 0.109284
+        target_pose.pose.position.z = 0.439211
         # target_pose.pose.orientation.x = -1.546266
         # target_pose.pose.orientation.y = -0.063824
         # target_pose.pose.orientation.z = -1.559499
-        # #target_pose.pose.orientation.w = -0.494393
+        target_pose.pose.orientation.w = 1
     
         
         # set the target pose for ee_link & go!
-        # arm.set_pose_target(target_pose, end_effector_link)
-        # arm.go()
+        arm.set_pose_target(target_pose, end_effector_link)
+        traj = arm.plan()[1]
+        arm.execute(traj, wait=True)
+        arm.clear_pose_targets()
+        rospy.sleep(1)
 
         # init waypoints
         waypoints = []
         start_pose = arm.get_current_pose(end_effector_link).pose
 
-        waypoints.append(start_pose)
+        ## DO NOT add start point into the waypoints!
+        ##otherwise u will get waypoints not strictly increasing ERROR.
+        #start_point = deepcopy(start_pose)
+        #waypoints.append(start_point)
 
         wpose = deepcopy(start_pose)
         
         wpose.position.z -= 0.05
-        wpose.position.x += 0.1
-        wpose.position.y += 0.1
+        wpose.position.x -= 0.05
+        wpose.position.y += 0.05
         waypoints.append(deepcopy(wpose))
 
 
-        wpose.position.x += 0.1
-        wpose.position.y += 0.1
-        wpose.position.z -= 0.05
-        waypoints.append(deepcopy(wpose))
 
+        wpose.position.x -= 0.1
+        wpose.position.y += 0.02
+        wpose.position.z -= 0.03
+        waypoints.append(deepcopy(wpose))
+   
         wpose.orientation.x += 1.0
         wpose.orientation.y += 0.5
         waypoints.append(deepcopy(wpose))
@@ -103,7 +109,7 @@ class MoveItCartesianDemo:
 
        
         fraction = 0.0   #path planned cover-percentage
-        maxtries = 10   #max try-times
+        maxtries = 50   #max try-times
         attempts = 0     
         plan_lib = []
 
@@ -131,17 +137,16 @@ class MoveItCartesianDemo:
             if fraction == 1.0:
                 plan_lib.append(plan)
                 rospy.loginfo("Path computed successfully. Moving the arm.")
-                arm.execute(plan)
+                arm.execute(plan,wait=True)
                 rospy.loginfo("Path execution complete.")
 
                 end_pose = arm.get_current_pose(end_effector_link).pose
                 print('End Pose: \n', end_pose)
-                print(plan)
+                
                 
             # if the plan fails, send failure message
             else:
                 rospy.loginfo("Path planning failed with only " + str(fraction) + " success after " + str(attempts) + " attempts.")  
-
                 rospy.sleep(1)
 
 
@@ -154,8 +159,6 @@ class MoveItCartesianDemo:
             # moveit_commander.roscpp_shutdown()
             # moveit_commander.os._exit(0)
         
-        #print(plan_lib)
-        #arm.execute(plan)
 
 if __name__ == "__main__":
     try:
